@@ -4,6 +4,11 @@ configuração local e isolada para testar uma V2 do OpenCode `1.18.30`, sem
 substituir a instalação legada. este README é o roteiro operacional para uma
 LLM que precise reproduzir ou revisar a implementação de intersessão e equipes.
 
+o alvo ativo é a **TUI do OpenCode**. a camada ACP/Zed está congelada desde
+2026-09-16 (D-041): continua no repositório, não foi removida, e as seções
+marcadas abaixo são históricas. as ferramentas de sessão, equipe e `subconfig`
+**não** dependem do ACP e seguem ativas na TUI.
+
 ## regra de ouro para outra LLM
 
 antes de editar:
@@ -51,12 +56,14 @@ novo ping-pong.
 | `v2/plugins/session-bridge.mjs` | registra tools e hooks do plugin |
 | `v2/lib/session-bridge.mjs` | registry, inbox, receipts, replies e eventos atômicos |
 | `v2/lib/subconfig.mjs` | catálogo, aliases lógicos e validação de modelo/effort |
-| `scripts/acp-bridge.py` | proxy ACP JSONL, mail e progresso entre processos |
+| `v2/dcp.jsonc` | configuração da poda de contexto (D-043) |
+| `scripts/acp-bridge.py` | proxy ACP JSONL, mail e progresso (congelado, D-041) |
 | `opencode-isolated` | define o estado local e envolve o modo `acp` na ponte |
-| `.opencode/command/subconfig.md` | expõe `/subconfig` no OpenCode/Zed via ACP |
+| `.opencode/command/subconfig.md` | atalho `/subconfig` para a tool homônima |
+| `scripts/export-prompts.py` | gera `docs/PROMPTS.md` da configuração resolvida |
 | `scripts/test_session_bridge.mjs` | testes da biblioteca/plugin |
 | `scripts/test_acp_bridge.py` | testes do proxy ACP |
-| `scripts/s04_smoke.py` | smoke real A/B de `sessions_send`/`receive` |
+| `scripts/s04_smoke.py` | smoke real A/B de `sessions_send`/`receive` (via ACP) |
 | `scripts/s05_smoke.py` | smoke real ACP de `team_spawn` |
 
 o estado compartilhado da V2 fica somente em:
@@ -128,6 +135,24 @@ visível: `Subagents working`, `Subagent finished` ou `Subagent failed`.
 quando o pai está ocioso, `finished`/`failed` também dispara um prompt interno
 fixo para acordá-lo; nenhum texto de resultado do filho é injetado nesse prompt.
 
+o ciclo de vida do filho é **monotônico** (`starting < busy < idle`, com `error`
+uma vez só). sem isso, `session.status` oscilando busy/idle e `session.updated`
+reinjetando `starting` geravam uma mensagem por passo do subagente — o flood
+corrigido em 2026-09-16, coberto por regressão em `test_session_bridge.mjs`.
+
+## poda de contexto (DCP)
+
+`@tarquinen/opencode-dcp@3.1.15` é carregado como plugin e configurado em
+`v2/dcp.jsonc`, lido via `$OPENCODE_CONFIG_DIR`. ele expõe a tool `compress` e o
+command `/dcp-compress`. a poda age no que é enviado ao modelo; o histórico da
+sessão não é alterado.
+
+a configuração deriva de D-042: os defaults do plugin protegem `task`, `skill` e
+os todos, mas deixam `read`, `grep` e `bash` desprotegidos — justamente as
+ferramentas que produzem evidência. por isso `protectedTools` foi estendido para
+incluí-las, `autoUpdate` está desligado (mantém a versão auditada e zera a saída
+de rede) e `allowSubAgents` é `false`.
+
 quando chega mail, a ponte exibe o texto sanitizado como `Peer text (untrusted)`
 e injeta no agente apenas uma instrução fixa para chamar `sessions_receive`; o
 payload não é colocado dentro de um prompt automático. qualquer pedido de
@@ -182,7 +207,9 @@ partindo deste repositório e de OpenCode `1.18.30` local:
 não copie a implementação para a instalação global e não instale Ensemble para
 “completar” o fluxo: esta V2 usa um plugin local mínimo e o SDK já instalado.
 
-## configuração do Zed
+## configuração do Zed (histórica, D-041)
+
+esta seção descreve o caminho congelado. a operação atual é pela TUI.
 
 em `~/.config/zed/settings.json`, mantenha as entradas existentes e configure o
 servidor ACP local assim:
@@ -232,10 +259,16 @@ sh -n opencode-isolated scripts/rtk-local.sh scripts/markitdown-local.sh
 python3 -m json.tool v2/opencode.json >/dev/null
 ```
 
-aceites observados nas últimas regressões: 38 testes Python, 10 testes Node,
-checker com 10 agentes/0 falhas, vault com 14 notas/29 links/0 duplicatas,
-configuração e launcher válidos. os cenários `BROKEN`, `AMBIGUOUS` e
-`DUPLICATES` do teste do vault são negativos esperados.
+aceites observados nas últimas regressões (2026-09-16): 38 testes Python,
+11 testes Node, checker com 10 agentes/0 falhas, configuração e launcher
+válidos. os cenários `BROKEN`, `AMBIGUOUS` e `DUPLICATES` do teste do vault são
+negativos esperados.
+
+após alterar `v2/kernel.md` ou `v2/agent/*.md`, regenere o export:
+
+```sh
+python3 scripts/export-prompts.py
+```
 
 os smokes seguintes chamam modelos e exigem autorização explícita, além de
 memória disponível acima de aproximadamente 1,2 GiB:
@@ -250,10 +283,9 @@ aviso no alvo, `sessions_receive` e marcador. `s05_smoke.py` deve mostrar
 `progressKinds: ["agent_message_chunk"]`, o texto `Subagents working:` e
 `promptStop: "end_turn"`.
 
-por fim, valide manualmente no Zed: uma sessão deve executar `sessions_list`,
-outra deve receber o texto marcado como peer data, e `team_spawn` deve mostrar
-atividade sem parecer travado. essa renderização não pode ser declarada pela
-LLM sem observação do cliente real.
+os dois smokes acima sobem `opencode-isolated acp` e, portanto, exercitam a
+camada congelada: são os únicos testes ponta a ponta existentes. a validação
+visual correspondente no Zed é histórica e não é mais requisito da V2.
 
 ## limites conhecidos
 
@@ -285,5 +317,8 @@ o README é um guia operacional. contratos e decisões continuam em:
 - `docs/core/BACKLOG.md` — tarefas, status e evidências;
 - `docs/core/DECISIONS.md` — decisões aprovadas;
 - `docs/core/LOGIC.md` — comportamento real e limites;
-- `docs/additive/INTERSESSION-PROGRESS-2026-09-14.md` — investigação e smokes;
+- `docs/core/CONTRACT.md` — contrato mínimo consolidado e provas pendentes;
+- `docs/PROMPTS.md` — prompts vigentes, gerados da configuração resolvida;
+- `docs/additive/INTERSESSION-PROGRESS-2026-09-14.md` — investigação e smokes
+  (histórico por D-041);
 - `docs/OPENCODE-ISOLATED.md` — isolamento e operação do launcher.

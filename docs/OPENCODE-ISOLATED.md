@@ -24,17 +24,27 @@ futuros nao compartilham os diretorios legados.
 Desde 2026-09-12 o `OPENCODE_CONFIG_DIR` aponta para `v2/`, que e a
 configuracao versionada da V2 (`v2/opencode.json`, `v2/kernel.md`,
 `v2/agent/*.md`). Dados, cache e estado continuam em `.opencode-local/`.
-O plugin local `v2/plugins/session-bridge.mjs` expoe `sessions_list`,
-`sessions_send`, `sessions_receive` e `team_spawn`. No subcomando `acp`, o
-launcher envolve o binario em `scripts/acp-bridge.py` para enviar atividade
-agregada como `session/update` ao cliente ACP; o estado fica em
-`.opencode-local/state/session-bridge/`.
-O command de projeto `.opencode/command/subconfig.md` e anunciado ao ACP como
-`/subconfig`; ele altera `v2/subagent-models.json` e so passa a valer após
-reinício.
-No ACP, mail e estados de `team_spawn` são atualizações visíveis fora de
-Thinking. `idle/error` podem acordar o pai ocioso por prompt interno fixo; texto
-de outra sessão continua entrando no contexto somente via `sessions_receive`.
+Tres plugins sao carregados pela V2, todos resolvidos localmente em
+`.opencode-local/cache/opencode/packages/` e nunca instalados globalmente:
+
+- `op-anthropic-auth@0.1.4` — OAuth Anthropic (experimental, D-035);
+- `@tarquinen/opencode-dcp@3.1.15` — poda de contexto, configurada em
+  `v2/dcp.jsonc` (D-043); expoe a tool `compress` e o command `/dcp-compress`;
+- `./plugins/session-bridge.mjs` — local, expoe `sessions_list`,
+  `sessions_send`, `sessions_receive`, `team_spawn` e `subconfig`, com estado em
+  `.opencode-local/state/session-bridge/`.
+
+Essas ferramentas funcionam na TUI: nenhuma delas depende do ACP. `subconfig` e
+uma tool chamavel diretamente pelo agente; `.opencode/command/subconfig.md` e
+apenas outra forma de invoca-la. Ela grava overrides em
+`v2/subagent-models.json` e so passa a valer apos reinicio.
+
+Texto de outra sessao entra no contexto somente via `sessions_receive`.
+
+A camada ACP esta **congelada** desde 2026-09-16 (D-041): `scripts/acp-bridge.py`
+e o ramo `acp` do launcher continuam no repositorio e nao foram removidos, mas
+o alvo ativo e a TUI. Ver `core/LOGIC.md` para o que deixaria de existir numa
+remocao futura.
 
 ## Piloto
 
@@ -70,7 +80,14 @@ OAuth Anthropic foi confirmado em 2026-09-12: Haiku respondeu
 `AUTH_ANTHROPIC_OK`, e a cadeia Sonnet → `explorer-claude`/Haiku retornou
 `DELEGADO_CLAUDE=sim`.
 
-## Uso no Zed
+Para inspecionar os prompts efetivamente resolvidos, use
+`python3 scripts/export-prompts.py`, que regenera `docs/PROMPTS.md` a partir de
+`debug agent` — nao do texto dos arquivos.
+
+## Uso no Zed (congelado, D-041)
+
+Esta secao e historica. A V2 e operada pela TUI; a configuracao abaixo continua
+funcionando, mas nao e mais o caminho validado.
 
 Registre um agente ACP customizado em `~/.config/zed/settings.json`, dentro de
 `agent_servers`, sem mexer nas entradas existentes:
