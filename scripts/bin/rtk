@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /home/dasher/projects/opencode-prefs-v2/scripts/rtk-local.sh "$@"

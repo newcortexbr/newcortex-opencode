@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "coder",
+  "plugin": ["op-anthropic-auth@0.1.4", "./plugins/session-bridge.mjs"],
+  "instructions": ["/home/dasher/projects/opencode-prefs-v2/v2/kernel.md"],
+  "permission": {
+    "read": {
+      "*": "allow",
+      "pessoal/**": "deny",
+      "conversa*.json": "deny",
+      "**/.env": "deny",
+      "**/.env.*": "deny",
+      "**/auth.json": "deny"
+    }
+  },
+  "agent": { "build": {"disable": true}, "plan": {"disable": true}, "general": {"disable": true}, "explore": {"disable": true} },
+  "mcp": {
+    "exa": { "type": "remote", "url": "https://mcp.exa.ai/mcp", "enabled": false },
+    "sequential-thinking": { "type": "local", "command": ["npx","-y","@modelcontextprotocol/server-sequential-thinking"], "enabled": true, "environment": { "DISABLE_THOUGHT_LOGGING": "true" } }
+  }
+}

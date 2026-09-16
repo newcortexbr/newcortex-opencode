@@ -1,0 +1,60 @@
+#!/bin/sh
+set -eu
+
+BASE_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+PREFIX="$BASE_DIR/.opencode-local"
+HOME_DIR="$PREFIX/home"
+CONFIG_HOME="$PREFIX/config"
+DATA_HOME="$PREFIX/data"
+CACHE_HOME="$PREFIX/cache"
+STATE_HOME="$PREFIX/state"
+TMP_DIR="$PREFIX/tmp"
+CONFIG_DIR="$BASE_DIR/v2"
+BIN="$PREFIX/bin/opencode"
+BRIDGE_DIR="$STATE_HOME/session-bridge"
+
+if [ ! -x "$BIN" ]; then
+  printf '%s\n' "OpenCode local binary not found: $BIN" >&2
+  exit 1
+fi
+
+umask 077
+mkdir -p "$HOME_DIR" "$CONFIG_DIR" "$DATA_HOME" "$CACHE_HOME" "$STATE_HOME" "$TMP_DIR"
+
+if [ "${1-}" = "acp" ]; then
+  shift
+  exec /usr/bin/env -i \
+    HOME="$HOME_DIR" \
+    PATH=/usr/bin:/bin \
+    TMPDIR="$TMP_DIR" \
+    XDG_CONFIG_HOME="$CONFIG_HOME" \
+    XDG_DATA_HOME="$DATA_HOME" \
+    XDG_CACHE_HOME="$CACHE_HOME" \
+    XDG_STATE_HOME="$STATE_HOME" \
+    OPENCODE_CONFIG_DIR="$CONFIG_DIR" \
+    OPENCODE_V2_BRIDGE_DIR="$BRIDGE_DIR" \
+    OPENCODE_V2_BRIDGE_PID="$$" \
+    OPENCODE_DISABLE_CLAUDE_CODE=1 \
+    OPENCODE_DISABLE_EXTERNAL_SKILLS=1 \
+    OPENCODE_DISABLE_AUTOUPDATE=1 \
+    OPENCODE_DISABLE_LSP_DOWNLOAD=1 \
+    /usr/bin/python3 "$BASE_DIR/scripts/acp-bridge.py" "$BIN" acp "$@"
+fi
+
+# env -i prevents legacy config, auth, provider keys, plugins and flag overrides
+# from entering the child process. All writable paths are rooted under PREFIX.
+exec /usr/bin/env -i \
+  HOME="$HOME_DIR" \
+  PATH=/usr/bin:/bin \
+  TMPDIR="$TMP_DIR" \
+  XDG_CONFIG_HOME="$CONFIG_HOME" \
+  XDG_DATA_HOME="$DATA_HOME" \
+  XDG_CACHE_HOME="$CACHE_HOME" \
+  XDG_STATE_HOME="$STATE_HOME" \
+  OPENCODE_CONFIG_DIR="$CONFIG_DIR" \
+  OPENCODE_V2_BRIDGE_DIR="$BRIDGE_DIR" \
+  OPENCODE_DISABLE_CLAUDE_CODE=1 \
+  OPENCODE_DISABLE_EXTERNAL_SKILLS=1 \
+  OPENCODE_DISABLE_AUTOUPDATE=1 \
+  OPENCODE_DISABLE_LSP_DOWNLOAD=1 \
+  "$BIN" "$@"

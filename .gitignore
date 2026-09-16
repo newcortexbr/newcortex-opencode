@@ -1,0 +1,43 @@
+# exports de sessão e transcrições: podem conter prompts, caminhos, conteúdo de
+# arquivos e segredos. nunca versionar.
+conversa*.json
+conversa*.md
+session-ses_*.md
+exports-local/
+
+# pacote e estado da execução isolada local
+opencode-linux-x64.tar.gz
+.opencode-local/
+
+# notas pessoais: fora do vault dos agentes, nunca versionar por padrão
+pessoal/
+
+# fontes humanas do vault e configuração local do Obsidian.
+# agentes leem `vault/human/` como dados; o conteúdo é do usuário, não do repo.
+vault/human/
+vault/.obsidian/
+
+# corpus externo para pesquisa, versionado no repositório de origem
+prompt-reference/
+
+# dependências e caches
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# vault: versionar apenas o esqueleto e os arquivos-base de convenção.
+# notas, memórias e análises de projetos ficam locais.
+vault/*
+!vault/agents/
+vault/agents/*
+!vault/agents/00-index.md
+!vault/agents/AGENTES-MD-VAULT.md
+!vault/agents/conceitos/
+!vault/agents/fontes/
+!vault/agents/inbox/
+!vault/agents/procedimentos/
+!vault/agents/projetos/
+vault/agents/*/*
+!vault/agents/*/.gitkeep
