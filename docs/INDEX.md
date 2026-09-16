@@ -8,6 +8,9 @@
 - `core/CONTRACT.md` — contrato mínimo consolidado, limites e provas pendentes.
 - `core/VAULT-ARCHITECTURE.md` — desenho aprovado do vault e validação do piloto.
 
+- `PROMPTS.md` — export dos prompts vigentes (kernel, dez agentes, commands) com
+  modelo e effort resolvidos; gerado por `scripts/export-prompts.py`.
+
 ## additive
 
 Os relatórios `HARNESS-*` da varredura de projetos saíram de `additive/` e vivem

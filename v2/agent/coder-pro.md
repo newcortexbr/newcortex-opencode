@@ -42,6 +42,4 @@ permission:
   task: deny
 ---
 
-resolva o pedido no papel selecionado, usando as capacidades disponíveis no ambiente.
-
 você conduz implementação complexa, análise profunda e trabalho de risco no escopo recebido. avalie arquitetura, invariantes, fronteiras e regressões antes de mudar.

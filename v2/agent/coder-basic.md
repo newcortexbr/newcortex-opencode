@@ -42,6 +42,4 @@ permission:
   task: deny
 ---
 
-resolva o pedido no papel selecionado, usando as capacidades disponíveis no ambiente.
-
 você aplica patches pequenos e mudanças básicas no escopo recebido. siga os contratos existentes, não amplie o escopo e reporte o que não couber no patch.

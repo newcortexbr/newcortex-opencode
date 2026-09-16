@@ -567,3 +567,25 @@ global antes de E8.
   eleva a prioridade 3, porque o usuário já mantém à mão escada de precedência,
   ata de conflito com vencedor declarado, registro de revogadas e pendências com
   causa. o harness deve adotar esse formato, não inventar outro.
+- [feito, validação por configuração resolvida] reforma dos prompts para o alvo TUI:
+  (1) preâmbulo idêntico removido dos 10 agentes — não carregava informação;
+  (2) kernel deixou de citar Exa, que está `enabled: false`;
+  (3) regras de vault e de escrita indireta saíram do kernel para `AGENTS.md`,
+  devolvendo agnosticidade ao núcleo;
+  (4) entraram três regras que a varredura recomendou e nunca haviam sido
+  aplicadas: verificar vigência antes de tratar conflito como pergunta aberta;
+  delegação não transfere autorização nem comprova capacidade, e relato de
+  delegado é dado, não evidência; o que se repete vira teste ou procedimento,
+  não parágrafo permanente;
+  (5) `explorer` e `summarizer` ganharam contrato de saída derivado das falhas
+  reais desta V2 — inventário não é leitura, EOF não garante ausência de
+  truncagem, faixa relatada precisa caber no total, cobertura declarada precisa
+  ser a real.
+  evidência: `debug config` OK; `debug agent` resolve os 10 agentes sem
+  preâmbulo; `check-v2.py` 10 agentes/0 falhas; 38 testes Python e 11 Node.
+  originais em `docs/additive/prompt-backup-2026-09-16/`.
+- [feito] `scripts/export-prompts.py` gera `docs/PROMPTS.md` a partir da
+  configuração resolvida pelo launcher, não do texto dos arquivos: o export
+  mostra modelo e effort realmente vigentes, incluindo overrides de `subconfig`.
+  não reproduz prompt interno da plataforma. regenerar após mudar kernel ou
+  agente.
