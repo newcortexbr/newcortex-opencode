@@ -549,9 +549,8 @@ global antes de E8.
   `_inject_internal_prompt`, no proxy, e não tem equivalente TUI; (c) S-04/S-05
   perdem seus únicos smokes ponta a ponta. as tools `sessions_list/send/receive`,
   `team_spawn` e `subconfig` NÃO são ACP-específicas e seguem ativas no TUI.
-- [aberto] reformatar kernel e prompts de agente para o OpenCode TUI: remover
-  pressupostos de cliente ACP/Zed do texto e otimizar custo de contexto.
-  escopo e critério de aceite a definir antes de editar.
+- [feito] reformatar kernel e prompts de agente para o OpenCode TUI: executado e
+  detalhado na entrada de reforma dos prompts abaixo; esta linha ficou obsoleta.
 - [feito, D-042] prioridade 1 do harness fechada como decisão e aplicada: `v2/kernel.md`
   §6 passou a definir conclusão por afirmação/alvo/camada/ambiente, com a regra
   "não deixe um estágio anterior passar por posterior" e a triagem de causa; e a
@@ -613,8 +612,11 @@ global antes de E8.
   command `dcp-compress`; `debug agent tasker` mostra `compress: true` e 17
   ferramentas; pacote resolvido em `.opencode-local/cache/opencode/packages/`,
   nunca global; `check-v2.py` 10 agentes/0 falhas e 38 testes Python OK.
-- [aberto, aceite de D-043] provar em sessão real que a poda preserva evidência:
-  rodar uma compressão com `/dcp-compress` após leituras e comandos, e verificar
-  que as saídas protegidas continuam sustentando a conclusão. hoje a proteção
-  está configurada e carregada, não demonstrada. avaliar também o efeito no
-  cache de prompt, que o próprio projeto estima em ~85% contra ~90% sem DCP.
+- [parcial, aceite de D-043] proteção exercitada em sessão real: duas compressões
+  desta sessão (250 mensagens no total) mantiveram as saídas de `read`, `grep` e
+  `bash` disponíveis, sem virar placeholder. isso prova a lista de proteção e a
+  substituição por sumário. continua **não** provado: (a) o caso adversário, em
+  que a poda tentaria descartar a saída de um teste e seria barrada; (b) a poda
+  automática — `deduplication` e `purgeErrors` rodam em recálculo próprio e não
+  foram exercitados; (c) o efeito no cache de prompt, que o próprio projeto
+  estima em ~85% contra ~90% sem DCP.

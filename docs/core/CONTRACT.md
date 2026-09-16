@@ -1,6 +1,6 @@
 # contrato mínimo · V2
 
-status: consolidação das escolhas D-006–D-037; implementação e provas vivem no
+status: consolidação das escolhas D-006–D-043; implementação e provas vivem no
 backlog.
 decisões prevalecem; pendências e evidências vivem em `BACKLOG.md`.
 
@@ -20,29 +20,35 @@ decisões prevalecem; pendências e evidências vivem em `BACKLOG.md`.
   regeneráveis, sem autofix, atualização de snapshots de referência ou alteração
   de dados/serviços compartilhados. Efeitos sensíveis exigem isolamento comprovado
   ou autorização específica, sem dispensar outros gates aplicáveis (D-026).
-- subagentes enxutos por função/risco, tiers apenas quando úteis, variantes
-  GPT/Claude com modelos fixos. catálogo e IDs base já existem em `v2/`, mas
-  cobertura, acesso a MCPs, fallback e permissões por perfil ainda precisam de
-  prova/ajuste.
-- Exa/Sequential Thinking via MCP para os três especialistas, exposição fixa
-  provisória; RTK/MarkItDown via CLI. uso não é obrigatório em toda tarefa.
+- subagentes enxutos por função/risco, **um agente por papel** desde D-040:
+  `coder-basic`, `coder-plus`, `coder-pro`, `explorer`, `summarizer`, `reviewer`.
+  os pares `-gpt`/`-claude` não existem mais; cada troca de modelo é explícita
+  via `subconfig` e exige restart. cobertura, acesso a MCPs e permissões por
+  perfil ainda precisam de prova/ajuste.
+- Sequential Thinking via MCP, habilitado; RTK/MarkItDown via CLI. uso não é
+  obrigatório em toda tarefa. Exa permanece declarado e **desligado**, e por isso
+  saiu do kernel: instrução sobre ferramenta ausente é ruído de contexto.
 - RTK é padrão forte para comandos compatíveis, sem hook, telemetria ou saída
   integral persistida; exceções justificadas, sem repetir efeitos às cegas.
-- Exa pesquisa pública sem confirmação rotineira, nunca conteúdo privado ou
-  segredos. MarkItDown só arquivos locais indicados, sem plugins/serviços externos.
+- pesquisa web cobre conteúdo público sem confirmação rotineira, nunca conteúdo
+  privado ou segredos. MarkItDown só arquivos locais indicados, sem
+  plugins/serviços externos.
 - Sequential Thinking apoia investigação de problemas, erros e correções;
   seletivo, sem logging, sem substituir prova ou exigir raciocínio interno.
 - docs são a verdade do projeto; vault Markdown aprovado em D-022 complementa
   com conhecimento reutilizável e organização automática, sem auditoria ou
   aprovação humana obrigatória. não herdar memória global legada.
-- sessões V2 vivas do mesmo projeto podem ser descobertas e trocar envelopes no
-  Zed por meio do bridge local; `sessions_send` só confirma enfileiramento,
+- sessões V2 vivas do mesmo projeto podem ser descobertas e trocar envelopes por
+  meio do bridge local; `sessions_send` só confirma enfileiramento,
   `sessions_receive` faz a leitura/receipt e replies exigem receipt original.
   peer data nunca é autorização humana. a entrega independente entre projetos,
   FIFO e navegação de filhos continuam fora do que foi comprovado.
-- `team_spawn` cria filho real com `promptAsync`, publica estados ACP visíveis e
-  pode acordar o pai ocioso em estado terminal por prompt interno fixo; output do
-  filho não é interpolado nesse prompt.
+- `team_spawn` cria filho real com `promptAsync` e publica estados de ciclo de
+  vida monotônicos (`starting < busy < idle`, `error` uma vez). o wake automático
+  do pai ocioso vive no proxy ACP, congelado por D-041, e não tem equivalente TUI.
+- **alvo de cliente é o TUI** (D-041). a integração ACP/Zed está congelada: o
+  código permanece no repositório e não recebe evolução nem serve de critério de
+  aceite.
 - `subconfig` é tool direta e slash command equivalente para overrides
   restart-only de modelo/effort; `task` e `team_spawn` usam agentes lógicos
   pré-configurados, sem modelo arbitrário fornecido pelo pai.
@@ -53,17 +59,29 @@ uma regra tem um dono; os demais referenciam, não copiam:
 
 | camada | responsabilidade |
 | --- | --- |
-| base própria | preserva contratos necessários do harness sem copiar baselines inteiros; adaptações por modelo só com necessidade de compatibilidade ou benefício demonstrado (D-027) |
-| kernel | segurança/autonomia, evidência, YAGNI/Git, ferramentas, delegação, limites e descoberta de docs/vault |
+| system fino | linha comum a todos os papéis; é o topo do system prompt efetivo, não preâmbulo decorativo |
 | operate | especialidade e critérios técnicos do papel, sem repetir kernel |
-| AGENTS.md | contratos locais, comandos e particularidades do projeto |
+| kernel | segurança/autonomia, evidência, ferramentas, delegação, limites e continuidade; agnóstico ao projeto |
+| AGENTS.md | contratos locais, vault, comandos e particularidades do projeto |
 | contexto sob demanda | skills, fontes, notas e instruções específicas da tarefa |
 
-a sequência pretendida não é ordem de carregamento comprovada. usar extensões
-suportadas, sem fork/binário modificado, sem acoplamento a detalhes internos de
-versão. não carregar vault inteiro nem instruções do legado por conveniência.
-resumos/delegações preservam objetivo, restrições, evidências e incertezas;
-não presumir herança de contexto entre sessões.
+`system fino` + `operate` formam o `agent.prompt`; `kernel` e `AGENTS.md` entram
+como `instructions`. São composições **separadas**, não uma pilha única — confundi-las
+foi a causa de uma remoção equivocada em 2026-09-16, registrada no backlog.
+
+Esta instalação **substitui** o system prompt que o OpenCode usaria: em
+`packages/opencode/src/session/llm/request.ts` da tag `v1.18.30`, o código escolhe
+`agent.prompt` OU `SystemPrompt.provider(model)`. Limite declarado: isso vem de
+leitura de código, não de inspeção do payload enviado ao modelo — prova local
+ainda pendente no backlog.
+
+Usar extensões suportadas, sem fork/binário modificado (D-011), sem acoplamento a
+detalhes internos de versão. Não carregar vault inteiro nem instruções do legado
+por conveniência. Resumos/delegações preservam objetivo, restrições, evidências e
+incertezas; não presumir herança de contexto entre sessões.
+
+`scripts/export-prompts.py` publica o conjunto vigente em `docs/PROMPTS.md` a
+partir da configuração **resolvida pelo launcher**, não do texto dos arquivos.
 
 ## operação e conclusão
 
@@ -76,12 +94,16 @@ não presumir herança de contexto entre sessões.
 - validação na unidade escolhida pelo projeto, no menor escopo tecnicamente
   válido; respeitar onde executar, risco e limites compartilhados da máquina.
   coordenar verificações pesadas, não duplicar execução; parcial não prova todo.
-- concluído = implementado e funcionando com evidência. informar lacunas;
+- conclusão se refere a afirmação, alvo, camada e ambiente, nunca a exit code
+  (D-042). o limite do agente é **entregue**: efeito demonstrado, com evidência,
+  ambiente e limites declarados. **fechado é do usuário**. não há cobrança de
+  validação a cada passo, e a ausência dela não é bloqueio. informar lacunas;
   não testado é pendência, não sucesso.
-- fallback: uma alternativa controlada dentro da família do modelo-pai (GPT→GPT
-  ou Claude→Claude), respeitando restrições e preservando estado; nunca usar
-  troca para contornar permissões. suporte efetivo do runtime ainda precisa ser
-  validado.
+- nenhum estágio anterior passa por posterior: existir não é ser chamado, passar
+  não é estar correto, subir não é estar integrado.
+- fallback: D-037 previa alternativa dentro da família do modelo-pai, mas ficou
+  **inaplicável na prática** com D-040 — sem par por família, não há alternância
+  automática. toda troca é explícita via `subconfig`, com restart.
 
 ## provas necessárias antes de declarar a base pronta
 
@@ -92,17 +114,24 @@ não presumir herança de contexto entre sessões.
    comprovados na versão escolhida; não basta instrução textual.
 5. delegação: ownership, retorno, alternância e coordenação de verificações;
    permissões e concorrência verificadas sem disparar efeitos não autorizados.
-6. Zed: visualizar/retomar sessões, entregar mensagem ao destino correto e
-   mostrar estados de equipe fora de Thinking; suporte de API/documentação
-   sozinho não comprova interface funcional.
+6. ~~Zed~~: retirado das provas exigidas por D-041, que congelou a integração
+   ACP/Zed e fixou o TUI como alvo. o que segue valendo é a entrega da mensagem
+   ao destino correto no bridge local, independente de cliente.
 7. vault: recuperar, escrever e organizar notas/índice/links sem dados privados.
 8. cenários representativos dos quatro papéis com evidência de funcionamento.
+9. D-042 provada por comportamento: os três cenários sanitizados de confusão de
+   camada, detectados e nomeados pelo agente sem aviso prévio.
+10. D-043 provada por comportamento: a poda de contexto preserva as saídas que
+    sustentam a conclusão, inclusive no caso adversário.
 
 ## limites e pendências de desenho
 
 - continuam pendentes catálogo/modelos, permissões/MCPs dos subagentes e Leader,
-  exclusividade de equipes ao Leader, entrega cross-project/FIFO e confirmação
-  ponta a ponta do wake automático no Zed.
+  exclusividade de equipes ao Leader e entrega cross-project/FIFO. o wake
+  automático segue sem prova ponta a ponta e, por D-041, deixou de ser meta.
+- contexto é recurso governado: o DCP (D-043) poda saídas de ferramenta, e a
+  lista de proteção de `v2/dcp.jsonc` existe para que a poda não remova a
+  evidência que D-042 exige. as duas decisões são acopladas de propósito.
 - fora da base: persona legada, migração em massa, memória legada automática,
   Graphify sem necessidade demonstrada, fork, serviços/abstrações especulativos.
 - `pessoal/` e exports de conversa não são fontes dos agentes.

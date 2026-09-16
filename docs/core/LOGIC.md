@@ -52,21 +52,53 @@ declarado e desligado; `sequential-thinking` está declarado como MCP local e
 habilitado, com logging de pensamento desativado. Isso não prova carregamento
 dinâmico sob demanda, restrição por agente nem uso funcional em uma tarefa.
 
+Os plugins carregados são três: `op-anthropic-auth@0.1.4` (OAuth Anthropic,
+D-035), `@tarquinen/opencode-dcp@3.1.15` (poda de contexto, D-043) e o local
+`./plugins/session-bridge.mjs`. Os dois externos são resolvidos em
+`.opencode-local/cache/opencode/packages/`, com versão fixada — nunca instalação
+global e nunca faixa aberta de versão.
+
 O checker local cobre parte do mapa resolvido de permissões e a precedência da
 configuração de projeto em fixture. Ele não prova semântica completa de globs,
 normalização de caminhos absolutos, ferramentas de busca, bloqueio de shell ou
 sandbox; os riscos devem continuar explícitos até aceites correspondentes.
 
-## desenho de prompts aprovado, ainda planejado
+## composição de prompts · aplicada em 2026-09-16
 
 D-025–D-027 definem uma base própria com contratos necessários do harness,
 sem cópia integral de baselines. Leader coordena e pode escrever documentação
 de coordenação, mas delega implementação/correção e alteração de requisitos.
 Suas verificações podem produzir artefatos locais regeneráveis nos limites de
 D-026; revisores permanecem sem escrita ou execução de verificações.
-Composição de prompts própria e controles adicionais ainda dependem do roteiro
-isolado em `additive/PROMPT-PROPOSAL.md`; essa proposta não substituiu o kernel
-e os agentes ativos acima.
+
+A composição deixou de ser apenas roteiro em `additive/PROMPT-PROPOSAL.md`. Hoje
+o que está ativo é:
+
+- `agent.prompt` de cada papel = `system fino` + `operate`. A linha `resolva o
+  pedido no papel selecionado, usando as capacidades disponíveis no ambiente.`
+  abre os dez agentes e **é a camada `system fino`**, não repetição. Como
+  `request.ts` da `v1.18.30` escolhe `agent.prompt` OU
+  `SystemPrompt.provider(model)`, havendo prompt de agente o baseline do provedor
+  não entra: essa linha é o topo do system prompt efetivo.
+- `instructions` = `v2/kernel.md`, resolvido por caminho absoluto, mais o
+  `AGENTS.md` descoberto nativamente. É uma composição separada do prompt de
+  agente.
+
+O kernel ficou agnóstico ao projeto: as regras de vault e de escrita indireta
+migraram para `AGENTS.md`, e a menção ao Exa saiu porque a ferramenta está
+desligada. Entraram três regras da varredura — verificar vigência antes de
+tratar conflito como pergunta aberta; delegação não transfere autorização nem
+comprova capacidade; o que se repete vira teste ou procedimento. O §6 passou a
+definir conclusão por afirmação/alvo/camada/ambiente e a distinguir **entregue**
+(agente, com evidência) de **fechado** (usuário), por D-042.
+
+`explorer` e `summarizer` têm contrato de saída derivado de falhas reais desta
+V2: inventário não é leitura, EOF não garante ausência de truncagem, faixa
+relatada precisa caber no total, cobertura declarada precisa ser a real.
+
+Limite a não esquecer: a substituição do system prompt vem de **leitura de
+código**, não de inspeção do payload. `docs/PROMPTS.md` declara esse limite em
+vez de afirmar cobertura, e a prova local continua aberta no backlog.
 
 ## catálogo de agentes
 
@@ -92,10 +124,12 @@ frontmatter resolvido quando o plugin não carrega. A divergência observada ant
 — `variant: low` apesar do override medium salvo — tinha como causa o módulo
 `v2/plugins/session-bridge.mjs` falhando na avaliação por um token solto na
 primeira linha; sem o módulo, nenhuma tool do bridge é registrada e nenhum
-override é aplicado. Depois da correção e do reinício, `subconfig reload`
-respondeu normalmente e `debug agent` passou a refletir o override
-(`anthropic/claude-sonnet-4-6`, `medium`). Portanto o diagnóstico só confirma
-modelo/effort quando o plugin está carregado.
+override é aplicado. O token foi removido e a linha 1 hoje é o import correto.
+Depois da correção e do reinício, `subconfig reload` respondeu normalmente e
+`debug agent` passou a refletir o override (`anthropic/claude-sonnet-4-6`,
+`medium`). Portanto o diagnóstico só confirma modelo/effort quando o plugin está
+carregado — regra geral: **um plugin que não carrega falha em silêncio**, e a
+configuração resolvida continua parecendo plausível.
 
 A seleção ativa é a lista fixa declarada na configuração, não um carregador por
 necessidade. A escolha de exposição dinâmica continua uma investigação aberta.
@@ -116,28 +150,39 @@ precisa estar no registry vivo. `sessions_receive` move o envelope para
 `receipts`, e reply duplicado é impedido por reserva exclusiva. Peer text é dado
 não confiável, não mensagem de usuário e não autorização.
 
-No modo ACP, `opencode-isolated` inicia `scripts/acp-bridge.py`, que mantém
-requests/responses ACP e consome eventos. Mail e progresso de `team_spawn` são
-exibidos como `agent_message_chunk`, fora do bloco recolhido de Thinking. O
-turno ACP do pai pode terminar logo após o `promptAsync`; estados posteriores
-continuam chegando como atualizações. O spinner depende do cliente Zed e não é
-garantido pelo protocolo.
+O progresso de ciclo de vida do filho é **monotônico**: `starting < busy < idle`,
+com `error` permitido uma vez. Sem isso, `session.status` oscilando busy/idle e
+`session.updated` reinjetando `starting` passavam pelo dedup de estado imediato e
+geravam uma mensagem por passo do subagente — o flood observado em 2026-09-16.
 
 `team_spawn` é uma tool local mínima baseada em `session.create` +
-`session.promptAsync`, não o Ensemble original. A integração foi validada por
-smoke ACP real; a confirmação visual do spinner nas sessões Zed deve ser feita
-após reinício do cliente.
+`session.promptAsync`, não o Ensemble original.
 
-`/subconfig` é um command de projeto anunciado ao ACP. `subconfig reload` cria
-um índice local de providers/modelos; a forma explícita
+### camada ACP · congelada (D-041)
+
+No modo `acp`, `opencode-isolated` inicia `scripts/acp-bridge.py`, que mantém
+requests/responses ACP e consome eventos. Mail e progresso de `team_spawn` são
+exibidos como `agent_message_chunk`, fora do bloco recolhido de Thinking, porque
+o Zed recolhe thought chunks. O wake automático do pai ocioso vive em
+`_inject_internal_prompt`, dentro do proxy, e **não tem equivalente no TUI**.
+
+Desde D-041 o alvo é o TUI e esta camada está congelada: o código permanece, não
+recebe evolução e não serve de critério de aceite. Consequência prática a não
+esquecer: o único consumidor de `events/` é o `EventStore` do proxy —
+`cleanupRegistrations` limpa apenas `registrations/` e `views/`. Fora do ACP,
+esse diretório não é drenado.
+
+`/subconfig` é um command de projeto. `subconfig reload` cria um índice local de
+providers/modelos; a forma explícita
 `/subconfig <agente> <provider/model> <effort>` grava somente overrides em
-`v2/subagent-models.json`. No próximo boot, o hook `config` aplica o mesmo
-override aos pares GPT/Claude do agente lógico. `task` e `team_spawn` escolhem
-agentes pré-configurados; não há roteamento automático, troca em filhos já
-ativos ou modelo arbitrário informado pelo agente-pai.
+`v2/subagent-models.json`. No próximo boot, o hook `config` aplica o override.
+Desde D-040 cada nome lógico tem **um alvo único**, então não há mais propagação
+a pares GPT/Claude. `task` e `team_spawn` escolhem agentes pré-configurados; não
+há roteamento automático, troca em filhos já ativos ou modelo arbitrário
+informado pelo agente-pai.
 O agente atual também pode chamar `subconfig` diretamente; `/subconfig` é apenas
-uma apresentação ACP do mesmo contrato. O kernel orienta esse uso e exige
-informar o restart.
+outra forma de invocar a mesma tool. O kernel orienta esse uso e exige informar
+o restart.
 
 O status operacional de `team_spawn` sai pelo canal ACP
 `agent_message_chunk`, não por `agent_thought_chunk`: o Zed recolhe thought
@@ -148,6 +193,33 @@ ponte possa exibir início, conclusão e falha.
 Em `idle/error`, se o pai está ocioso, a ponte dispara um prompt interno fixo;
 se o pai ainda está ocupado, posterga o wake até o fim do turno. Nenhum payload
 do filho é injetado como instrução.
+
+## poda de contexto · DCP
+
+`@tarquinen/opencode-dcp@3.1.15` (D-043) governa o custo de contexto por três
+mecanismos independentes:
+
+1. **`compress`** — tool exposta ao agente, que escolhe quando e o quê colapsar,
+   substituindo a faixa por um sumário que ele mesmo escreve.
+2. **`deduplication`** — mesma tool com os mesmos argumentos: mantém a saída mais
+   recente e poda as anteriores.
+3. **`purgeErrors`** — poda o input de chamadas que erraram, após N turnos.
+
+O histórico da sessão não é alterado; a poda incide sobre o que é enviado ao
+modelo. A configuração vive em `v2/dcp.jsonc`, lido via `$OPENCODE_CONFIG_DIR`.
+
+Ela foi escrita a partir de uma tensão real com D-042: os defaults do plugin
+protegem `task/skill/todowrite/todoread`, mas deixam `read`, `grep` e `bash`
+desprotegidos — exatamente as ferramentas que produzem evidência. Por isso a
+instalação estende `protectedTools` com read/grep/glob/list/bash/webfetch, liga
+`turnProtection` (4 turnos), desliga `autoUpdate` (mantém a versão auditada e
+zera a única saída de rede do pacote) e mantém `allowSubAgents: false`.
+
+Estado de prova: a substituição por sumário e a lista de proteção foram
+exercitadas em sessão real. A poda automática (`deduplication`, `purgeErrors`) e
+o caso adversário **não** foram demonstrados; o aceite segue parcial no backlog.
+
+## catálogo de modelos
 
 O launcher não define `OPENCODE_DISABLE_MODELS_FETCH`. Assim, `models --refresh`
  pode atualizar o catálogo público; a execução de 2026-09-15 listou 38 IDs,
