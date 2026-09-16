@@ -114,7 +114,12 @@ legenda: `[feito]`, `[parcial]`, `[aberto]`, `[bloqueado]`, `[descartado]`.
   de hipóteses dependentes das fontes externas. A comparação personalizada segue
   bloqueada; o debate local pode avançar sem autorizar implementação. Prioridades
   no relatório são recomendações, não aprovação nem fila concorrente.
-- [aberto] investigar anomalia `cont` em `v2/plugins/session-bridge.mjs:1`,
+- [resolvido em 2026-09-16] a anomalia `cont` em `v2/plugins/session-bridge.mjs:1`
+  não existe mais: a linha 1 é `import { tool } from "@opencode-ai/plugin";` e o
+  plugin carrega, com as tools registradas e 11 testes Node passando. o token
+  solto foi corrigido na rodada do catálogo unificado; esta entrada ficou
+  desatualizada. registro original abaixo.
+- [histórico] investigar anomalia `cont` em `v2/plugins/session-bridge.mjs:1`,
   confirmada por leitura direta nesta rodada. Possível falha de avaliação no
   próximo carregamento; sem reprodução de boot/import e sem correção no escopo
   de diagnóstico. Smoke histórico não valida automaticamente o arquivo atual.
