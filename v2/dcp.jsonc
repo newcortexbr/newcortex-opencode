@@ -1,0 +1,79 @@
+// Dynamic Context Pruning — configuração da V2.
+// Lido por estar em $OPENCODE_CONFIG_DIR, que o launcher aponta para `v2/`.
+//
+// Premissa desta configuração: D-042. Poda reduz tokens, mas não pode apagar a
+// evidência que sustenta uma conclusão. Por isso as ferramentas que produzem
+// evidência entram nas listas de proteção, e não confiamos nos defaults.
+{
+    "$schema": "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json",
+    "enabled": true,
+
+    // Pinado em 3.1.15 no `plugin` de opencode.json e auditado nessa versão.
+    // Atualização automática traria código novo sem auditoria e é a única
+    // origem de tráfego de rede do plugin (registry.npmjs.org, lib/update.ts).
+    "autoUpdate": false,
+    "debug": false,
+
+    // Poda precisa ser observável: se o contexto encolheu, queremos ver.
+    "pruneNotification": "detailed",
+    "pruneNotificationType": "chat",
+
+    "commands": {
+        "enabled": true,
+        "protectedTools": ["read", "grep", "glob", "list", "bash", "webfetch"]
+    },
+
+    // Saída de ferramenta recente não é podada: evita perder o que acabou de
+    // sustentar uma afirmação ainda em discussão.
+    "turnProtection": {
+        "enabled": true,
+        "turns": 4
+    },
+
+    "experimental": {
+        // Sessão de subagente não é podada: explorer e summarizer precisam do
+        // material bruto para declarar cobertura real.
+        "allowSubAgents": false,
+        "customPrompts": false
+    },
+
+    "compress": {
+        "mode": "range",
+        "permission": "allow",
+        "showCompression": false,
+        "summaryBuffer": true,
+
+        // Saídas destas ferramentas são preservadas dentro do sumário de
+        // compressão. Os defaults do plugin cobrem task/skill/todos, mas
+        // deixam de fora justamente read/grep/bash, que são nossa evidência.
+        "protectedTools": [
+            "task",
+            "skill",
+            "todowrite",
+            "todoread",
+            "read",
+            "grep",
+            "glob",
+            "list",
+            "bash",
+            "webfetch"
+        ],
+        "protectTags": true,
+        "protectUserMessages": true
+    },
+
+    "strategies": {
+        // Desduplicação mantém só a saída mais recente de chamadas idênticas.
+        // `bash` fica protegido porque rodar o mesmo comando antes e depois de
+        // uma correção é evidência de regressão, não repetição descartável.
+        "deduplication": {
+            "enabled": true,
+            "protectedTools": ["bash"]
+        },
+        "purgeErrors": {
+            "enabled": true,
+            "turns": 4,
+            "protectedTools": ["bash"]
+        }
+    }
+}

@@ -605,3 +605,16 @@ global antes de E8.
   código da `v1.18.30`, não de inspeção do payload realmente enviado ao modelo.
   enquanto não houver essa prova, `docs/PROMPTS.md` declara o limite em vez de
   afirmar cobertura.
+- [feito, D-043] DCP instalado nesta V2: `@tarquinen/opencode-dcp@3.1.15` no
+  `plugin` de `v2/opencode.json`, com `v2/dcp.jsonc` derivado de D-042 — as
+  ferramentas que produzem evidência (`read`, `grep`, `glob`, `list`, `bash`,
+  `webfetch`) entram nas listas de proteção, porque os defaults do plugin não as
+  cobrem. evidência: `debug config` expõe `primary_tools: ["compress"]` e o
+  command `dcp-compress`; `debug agent tasker` mostra `compress: true` e 17
+  ferramentas; pacote resolvido em `.opencode-local/cache/opencode/packages/`,
+  nunca global; `check-v2.py` 10 agentes/0 falhas e 38 testes Python OK.
+- [aberto, aceite de D-043] provar em sessão real que a poda preserva evidência:
+  rodar uma compressão com `/dcp-compress` após leituras e comandos, e verificar
+  que as saídas protegidas continuam sustentando a conclusão. hoje a proteção
+  está configurada e carregada, não demonstrada. avaliar também o efeito no
+  cache de prompt, que o próprio projeto estima em ~85% contra ~90% sem DCP.

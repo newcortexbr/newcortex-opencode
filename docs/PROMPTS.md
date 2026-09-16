@@ -90,10 +90,10 @@ ao superar uma regra ou documento, nomeie o que foi revogado e por qual fonte, e
 
 | agente | modo | modelo | effort | ferramentas habilitadas |
 | --- | --- | --- | --- | --- |
-| `tasker` | primary | (herda da sessao) | - | 16 |
-| `coder` | primary | (herda da sessao) | - | 16 |
-| `designer` | primary | (herda da sessao) | - | 16 |
-| `leader` | primary | (herda da sessao) | - | 15 |
+| `tasker` | primary | (herda da sessao) | - | 17 |
+| `coder` | primary | (herda da sessao) | - | 17 |
+| `designer` | primary | (herda da sessao) | - | 17 |
+| `leader` | primary | (herda da sessao) | - | 16 |
 | `coder-basic` | subagent | `anthropic/claude-haiku-4-5` | high | 7 |
 | `coder-plus` | subagent | `opencode/muse-spark-1.3-contributor-free` | medium | 7 |
 | `coder-pro` | subagent | `anthropic/claude-opus-5` | high | 7 |
@@ -106,7 +106,7 @@ ao superar uma regra ou documento, nomeie o que foi revogado e por qual fonte, e
 - modo: primary
 - modelo: (herda da sessao), effort `-`
 - descricao: generalista operacional: sistemas, diagnóstico, ferramentas e automação
-- ferramentas habilitadas: `apply_patch`, `bash`, `glob`, `grep`, `invalid`, `question`, `read`, `sessions_list`, `sessions_receive`, `sessions_send`, `skill`, `subconfig`, `task`, `team_spawn`, `todowrite`, `webfetch`
+- ferramentas habilitadas: `apply_patch`, `bash`, `compress`, `glob`, `grep`, `invalid`, `question`, `read`, `sessions_list`, `sessions_receive`, `sessions_send`, `skill`, `subconfig`, `task`, `team_spawn`, `todowrite`, `webfetch`
 
 ```markdown
 resolva o pedido no papel selecionado, usando as capacidades disponíveis no ambiente.
@@ -125,7 +125,7 @@ distinga paliativo, correção e prevenção. falta de acesso ou autenticação 
 - modo: primary
 - modelo: (herda da sessao), effort `-`
 - descricao: implementa e mantém software
-- ferramentas habilitadas: `apply_patch`, `bash`, `glob`, `grep`, `invalid`, `question`, `read`, `sessions_list`, `sessions_receive`, `sessions_send`, `skill`, `subconfig`, `task`, `team_spawn`, `todowrite`, `webfetch`
+- ferramentas habilitadas: `apply_patch`, `bash`, `compress`, `glob`, `grep`, `invalid`, `question`, `read`, `sessions_list`, `sessions_receive`, `sessions_send`, `skill`, `subconfig`, `task`, `team_spawn`, `todowrite`, `webfetch`
 
 ```markdown
 resolva o pedido no papel selecionado, usando as capacidades disponíveis no ambiente.
@@ -144,7 +144,7 @@ escolha verificações capazes de detectar o defeito e regressões pertinentes; 
 - modo: primary
 - modelo: (herda da sessao), effort `-`
 - descricao: design, UI e UX
-- ferramentas habilitadas: `apply_patch`, `bash`, `glob`, `grep`, `invalid`, `question`, `read`, `sessions_list`, `sessions_receive`, `sessions_send`, `skill`, `subconfig`, `task`, `team_spawn`, `todowrite`, `webfetch`
+- ferramentas habilitadas: `apply_patch`, `bash`, `compress`, `glob`, `grep`, `invalid`, `question`, `read`, `sessions_list`, `sessions_receive`, `sessions_send`, `skill`, `subconfig`, `task`, `team_spawn`, `todowrite`, `webfetch`
 
 ```markdown
 resolva o pedido no papel selecionado, usando as capacidades disponíveis no ambiente.
@@ -163,7 +163,7 @@ confronte implementação com referências e interações reais; código válido
 - modo: primary
 - modelo: (herda da sessao), effort `-`
 - descricao: coordena a tarefa, delega e faz a revisão mestre
-- ferramentas habilitadas: `apply_patch`, `bash`, `glob`, `grep`, `invalid`, `question`, `read`, `sessions_list`, `sessions_receive`, `sessions_send`, `subconfig`, `task`, `team_spawn`, `todowrite`, `webfetch`
+- ferramentas habilitadas: `apply_patch`, `bash`, `compress`, `glob`, `grep`, `invalid`, `question`, `read`, `sessions_list`, `sessions_receive`, `sessions_send`, `subconfig`, `task`, `team_spawn`, `todowrite`, `webfetch`
 
 ```markdown
 resolva o pedido no papel selecionado, usando as capacidades disponíveis no ambiente.
