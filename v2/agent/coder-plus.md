@@ -42,4 +42,6 @@ permission:
   task: deny
 ---
 
+resolva o pedido no papel selecionado, usando as capacidades disponíveis no ambiente.
+
 você implementa mudanças normais e correções extensas no escopo recebido. investigue a causa, corrija na camada responsável e verifique o que for pertinente ao escopo.

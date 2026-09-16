@@ -568,7 +568,13 @@ global antes de E8.
   ata de conflito com vencedor declarado, registro de revogadas e pendências com
   causa. o harness deve adotar esse formato, não inventar outro.
 - [feito, validação por configuração resolvida] reforma dos prompts para o alvo TUI:
-  (1) preâmbulo idêntico removido dos 10 agentes — não carregava informação;
+  (1) CORRIGIDO na mesma rodada: a linha comum dos 10 agentes foi removida por
+  engano e restaurada. ela não é preâmbulo redundante — é a camada `system fino`
+  de `additive/PROMPT-PROPOSAL.md`. como `request.ts` da `v1.18.30` escolhe
+  `agent.prompt` OU `SystemPrompt.provider(model)`, o prompt de agente substitui
+  o baseline do provedor: essa linha é o topo do system prompt efetivo, não
+  decoração. lição registrada: texto repetido em todos os papéis pode ser camada
+  compartilhada, não duplicação;
   (2) kernel deixou de citar Exa, que está `enabled: false`;
   (3) regras de vault e de escrita indireta saíram do kernel para `AGENTS.md`,
   devolvendo agnosticidade ao núcleo;
@@ -589,3 +595,8 @@ global antes de E8.
   mostra modelo e effort realmente vigentes, incluindo overrides de `subconfig`.
   não reproduz prompt interno da plataforma. regenerar após mudar kernel ou
   agente.
+- [aberto] provar localmente a substituição do system prompt: hoje a afirmação de
+  que `agent.prompt` suprime `SystemPrompt.provider(model)` vem de leitura do
+  código da `v1.18.30`, não de inspeção do payload realmente enviado ao modelo.
+  enquanto não houver essa prova, `docs/PROMPTS.md` declara o limite em vez de
+  afirmar cobertura.
